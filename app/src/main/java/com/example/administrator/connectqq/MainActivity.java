@@ -1,10 +1,12 @@
 package com.example.administrator.connectqq;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -13,6 +15,7 @@ import android.widget.Toast;
 
 import com.tencent.connect.UserInfo;
 import com.tencent.connect.auth.QQToken;
+import com.tencent.connect.common.Constants;
 import com.tencent.tauth.IUiListener;
 import com.tencent.tauth.Tencent;
 import com.tencent.tauth.UiError;
@@ -31,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
     private static String openId;
     private Bitmap bitmap;
     private String nickname;
+
+    private IUiListener loginListener;
 
 
     @Override
@@ -56,10 +61,77 @@ public class MainActivity extends AppCompatActivity {
         Appid = AppConstant.APP_ID;
         //实现调用QQ登录
         tencent = Tencent.createInstance(Appid,getApplicationContext());
-        tencent.login(MainActivity.this,"all",new BaseUiListener());
-        //调用SDK已经封装好的借口包括登录等的时候就需要传入一个回调的实例
+        //tencent.login(MainActivity.this,"all",new BaseUiListener());
+        //调用SDK已经封装好的借口包括登录等的时候就需要传入IUiListener回调的实例，用来接收SDK返回的结果
+
+        loginListener = new IUiListener() {
+            @Override
+            public void onComplete(Object o) {
+                Toast.makeText(MainActivity.this,"登录成功",Toast.LENGTH_SHORT).show();
+                try{
+                    openId = ((JSONObject)o).getString("openid");
+                    openid.setText(openId);
+                }catch (JSONException e){
+                    e.printStackTrace();
+                }
+                QQToken qqToken = tencent.getQQToken();
+                UserInfo info = new UserInfo(getApplicationContext(),qqToken);
+                //UserInfo这个类中封装了QQ的一些信息，包括昵称、头像什么的
+                info.getUserInfo(new IUiListener() {
+                    @Override
+                    public void onComplete(final Object o) {
+                        Message msg = new Message();
+                        msg.obj = o;
+                        msg.what = 0;
+                        mHandler.sendMessage(msg);
+                        //o里面有 QQ用户的昵称
+                        //还有头像的话，因为要下载，所以就放在线程里面做
+                        new Thread(){
+                            public void run(){
+                                JSONObject jsonObject = (JSONObject) o;
+                                try{
+                                    bitmap = Util.getBitmap(jsonObject.getString("figureurl_qq_2"));
+                                }catch (JSONException e){
+                                    e.printStackTrace();
+                                }
+                                Message msg1 = new Message();
+                                msg1.obj = bitmap;
+                                msg1.what = 1;
+                                mHandler.sendMessage(msg1);
+                            }
+                        }.start();
+
+                    }
+
+                    @Override
+                    public void onError(UiError uiError) {
+
+                    }
+
+                    @Override
+                    public void onCancel() {
+
+                    }
+                });
+
+            }
+
+            @Override
+            public void onError(UiError uiError) {
+
+            }
+
+            @Override
+            public void onCancel() {
+
+            }
+        };
+        tencent.login(MainActivity.this,"all",loginListener);
+
+
     }
 
+    /*
     private class BaseUiListener implements IUiListener{
 
         @Override
@@ -92,10 +164,10 @@ public class MainActivity extends AppCompatActivity {
                             }catch (JSONException e){
                                 e.printStackTrace();
                             }
-                            Message msg = new Message();
-                            msg.obj = bitmap;
-                            msg.what = 1;
-                            mHandler.sendMessage(msg);
+                            Message msg1 = new Message();
+                            msg1.obj = bitmap;
+                            msg1.what = 1;
+                            mHandler.sendMessage(msg1 );
                         }
                     }.start();
 
@@ -124,6 +196,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+    */
 
     Handler mHandler = new Handler(){
         public void handleMessage(Message message){
@@ -146,4 +219,18 @@ public class MainActivity extends AppCompatActivity {
         }
 
     };
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        //由于在一些低端机器上，因为内存原因，无法返回到回调onComplete里面，是以onActivityResult的方式返回
+        if(requestCode==11101&&resultCode==RESULT_OK){
+            //处理返回的数据
+            if(data==null){
+                Toast.makeText(getApplicationContext(),"返回数据为空",Toast.LENGTH_LONG);
+            }else{
+                Tencent.handleResultData(data,loginListener);
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+
 }
