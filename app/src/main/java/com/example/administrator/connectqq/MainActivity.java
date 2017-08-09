@@ -23,9 +23,11 @@ import com.tencent.tauth.UiError;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private Button openQQ;
+    private Button openWechat;
+    private Button openWeibo;
     private TextView openid;
     private TextView user_name;
     private ImageView user_logo;
@@ -50,15 +52,37 @@ public class MainActivity extends AppCompatActivity {
         user_logo = (ImageView) findViewById(R.id.user_logo);
 
         openQQ = (Button) findViewById(R.id.openQQ);
-        openQQ.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                LogQQ();
-            }
-        });
+        openQQ.setOnClickListener(this);
+
+        openWechat = (Button) findViewById(R.id.openWechat);
+        openWechat.setOnClickListener(this);
+
+        openWeibo = (Button) findViewById(R.id.openWeibo);
+        openWeibo.setOnClickListener(this);
 
     }
 
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.openQQ:
+                LogQQ();
+                break;
+            case R.id.openWechat:
+                LogWechat();
+                break;
+            case R.id.openWeibo:
+                LogWeibo();
+                break;
+
+
+            default:
+                break;
+        }
+
+    }
+
+    //关联QQ
     private void LogQQ(){
         Appid = AppConstant.APP_ID;
         //实现调用QQ登录
@@ -138,12 +162,18 @@ public class MainActivity extends AppCompatActivity {
 
             }
         };
+    }
 
-
-
-
+    //关联微信
+    private void LogWechat(){
 
     }
+
+    //关联微博
+    private  void LogWeibo(){
+        
+    }
+
 
     /*
     private class BaseUiListener implements IUiListener{
@@ -221,6 +251,7 @@ public class MainActivity extends AppCompatActivity {
                         try{
                             nickname = response.getString("nickname");
                             user_name.setText(nickname);
+
                         }catch (JSONException e){
                             e.printStackTrace();
                         }

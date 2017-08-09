@@ -9,6 +9,18 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Open QQ"/>
+    <Button
+        android:id="@+id/openWechat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="open Wechat"/>
+    <Button
+        android:id="@+id/openWeibo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="open Weibo"/>
+
+
     <ImageView
         android:id="@+id/user_logo"
         android:layout_width="wrap_content"
@@ -21,4 +33,5 @@
         android:id="@+id/open_id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+
 </LinearLayout>
