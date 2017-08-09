@@ -34,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
     private static String openId;
     private Bitmap bitmap;
     private String nickname;
+    private static String token;
+    private static String expires;
 
     private IUiListener loginListener;
 
@@ -64,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
         //tencent.login(MainActivity.this,"all",new BaseUiListener());
         //调用SDK已经封装好的借口包括登录等的时候就需要传入IUiListener回调的实例，用来接收SDK返回的结果
 
+        tencent.login(MainActivity.this,"all",loginListener);
+
         loginListener = new IUiListener() {
             @Override
             public void onComplete(Object o) {
@@ -71,9 +75,17 @@ public class MainActivity extends AppCompatActivity {
                 try{
                     openId = ((JSONObject)o).getString("openid");
                     openid.setText(openId);
+                    token = ((JSONObject) o).getString("access_token");
+                    expires = ((JSONObject) o).getString("expires_in");
+
+                    //需要设置openI和access_token才能获取数据
+                    tencent.setOpenId(openId);
+                    tencent.setAccessToken(token,expires);
+
                 }catch (JSONException e){
                     e.printStackTrace();
                 }
+
                 QQToken qqToken = tencent.getQQToken();
                 UserInfo info = new UserInfo(getApplicationContext(),qqToken);
                 //UserInfo这个类中封装了QQ的一些信息，包括昵称、头像什么的
@@ -126,7 +138,9 @@ public class MainActivity extends AppCompatActivity {
 
             }
         };
-        tencent.login(MainActivity.this,"all",loginListener);
+
+
+
 
 
     }
